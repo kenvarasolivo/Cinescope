@@ -756,51 +756,35 @@ document.getElementById('searchInput').addEventListener('input', function() {
 
 /* ── INIT ──────────────────────────────────────────────────── */
 async function init() {
-  /* validate token */
-  const tokenOk = TMDB_TOKEN && !TMDB_TOKEN.startsWith('PASTE');
-
   /* show skeletons */
   document.getElementById('moviesRow').innerHTML = skeletons(8);
   document.getElementById('gamesRow').innerHTML  = skeletons(8);
 
   /* ── MOVIES ── */
-  if (!tokenOk) {
-    showError('movieError','TMDB token not configured — open cinescope.html, find TMDB_TOKEN at the top of the <script> and paste your Read Access Token.');
-    document.getElementById('moviesRow').innerHTML = '<p style="color:var(--txt2);padding:20px">Waiting for TMDB token…</p>';
-  } else {
-    try {
-      const data = await fetchTMDB('/trending/movie/week');
-      ALL_MOVIES = data.results || [];
-      buildFilters(ALL_MOVIES, 'movieFilters', m=>genreFromTMDB(m.genre_ids), applyMovieFilter);
-      renderMovies();
-    } catch(e) {
-      showError('movieError', `Could not load movies: ${e.message}. Check your TMDB Read Access Token.`);
-      document.getElementById('moviesRow').innerHTML = '';
-    }
+  try {
+    // Fetch directly from your secure Vercel backend
+    const data = await fetchTMDB('/trending/movie/week');
+    ALL_MOVIES = data.results || [];
+    buildFilters(ALL_MOVIES, 'movieFilters', m=>genreFromTMDB(m.genre_ids), applyMovieFilter);
+    renderMovies();
+  } catch(e) {
+    showError('movieError', `Could not load movies: ${e.message}. Check your Vercel Environment Variables.`);
+    document.getElementById('moviesRow').innerHTML = '';
   }
 
   /* ── GAMES ── */
-  const rawgOk = RAWG_KEY && RAWG_KEY.length > 5;
-  if (rawgOk) {
-    try {
-      const today = new Date().toISOString().slice(0,10);
-      const from  = '2023-01-01';
-      const data  = await fetchRAWG(`/games?ordering=-added&page_size=15&dates=${from},${today}`);
-      ALL_GAMES = data.results || [];
-      if (!ALL_GAMES.length) throw new Error('empty response');
-    } catch(e) {
-      showError('gameError', `Could not load games from RAWG: ${e.message}. Showing demo data.`);
-      ALL_GAMES = MOCK_GAMES;
-    }
-  } else {
+  try {
+    const today = new Date().toISOString().slice(0,10);
+    const from  = '2023-01-01';
+    
+    // Fetch directly from your secure Vercel backend
+    const data  = await fetchRAWG(`/games?ordering=-added&page_size=15&dates=${from},${today}`);
+    ALL_GAMES = data.results || [];
+    
+    if (!ALL_GAMES.length) throw new Error('empty response');
+  } catch(e) {
+    showError('gameError', `Could not load games: ${e.message}. Showing demo data.`);
     ALL_GAMES = MOCK_GAMES;
-    if (RAWG_KEY === '') {
-      document.getElementById('gameError').textContent = '💡 Showing demo game data. Add your free RAWG API key to see live data — rawg.io/apidocs';
-      document.getElementById('gameError').classList.add('show');
-      document.getElementById('gameError').style.color = 'var(--teal)';
-      document.getElementById('gameError').style.borderColor = 'rgba(0,201,167,.25)';
-      document.getElementById('gameError').style.background = 'rgba(0,201,167,.07)';
-    }
   }
 
   const getGenre = g => g.genres && g.genres.length ? g.genres[0].name : 'Game';
