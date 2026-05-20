@@ -347,12 +347,6 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:40px 64p
 </footer>
 
 <script>
-/* ══════════════════════════════════════════════════════════════
-   🔑  YOUR API CREDENTIALS — paste tokens here
-══════════════════════════════════════════════════════════════ */
-const TMDB_TOKEN = '';
-const RAWG_KEY   = '';  
-/* ══════════════════════════════════════════════════════════════ */
 
 /* ── CONSTANTS ─────────────────────────────────────────────── */
 const TMDB_BASE   = 'https://api.themoviedb.org/3';
@@ -396,16 +390,16 @@ let analyticsMode = 'all';
 
 /* ── API ───────────────────────────────────────────────────── */
 async function fetchTMDB(path) {
-  const r = await fetch(`${TMDB_BASE}${path}`, {
-    headers:{ Authorization:`Bearer ${TMDB_TOKEN}`, 'Content-Type':'application/json' }
-  });
+  // We use encodeURIComponent to safely pass your path to the Vercel backend
+  const r = await fetch(`/api/tmdb?path=${encodeURIComponent(path)}`);
+  
   if (!r.ok) throw new Error(`TMDB ${r.status}`);
   return r.json();
 }
 
 async function fetchRAWG(path) {
-  const sep = path.includes('?') ? '&' : '?';
-  const r = await fetch(`${RAWG_BASE}${path}${sep}key=${RAWG_KEY}`);
+  const r = await fetch(`/api/rawg?path=${encodeURIComponent(path)}`);
+  
   if (!r.ok) throw new Error(`RAWG ${r.status}`);
   return r.json();
 }
