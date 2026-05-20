@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineScope — Trending Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#080810;--bg2:#0f0f1a;--bg3:#16161f;--card:#1c1c28;
+  --red:#e50914;--gold:#f5a623;--teal:#00c9a7;--purple:#9b59b6;
+  --txt:#fff;--txt2:#9898b0;--txt3:#555568;
+  --border:rgba(255,255,255,.07);
+  --ff:'Bebas Neue',cursive;--fb:'DM Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:18px 64px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(8,8,16,.97) 0%,transparent 100%);backdrop-filter:blur(10px)}
+.logo{font-family:var(--ff);font-size:2rem;color:var(--red);letter-spacing:3px;cursor:pointer}.logo span{color:#fff}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{color:var(--txt2);text-decoration:none;font-size:.88rem;font-weight:500;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:#fff}
+.nav-right{display:flex;align-items:center;gap:16px}
+.search-wrap{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:8px;padding:8px 14px;transition:all .2s}
+.search-wrap:focus-within{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.1)}
+.search-wrap input{background:none;border:none;outline:none;color:#fff;font-family:var(--fb);font-size:.88rem;width:180px}
+.search-wrap input::placeholder{color:var(--txt3)}
+.nav-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--red),#7b0a12);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;cursor:pointer}
+
+/* HERO */
+.hero{height:90vh;position:relative;display:flex;align-items:flex-end;padding:80px 64px;overflow:hidden}
+.hero-backdrop{position:absolute;inset:0;background-size:cover;background-position:center top;transition:opacity 1.2s ease}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(8,8,16,.92) 0%,rgba(8,8,16,.5) 50%,rgba(8,8,16,.1) 100%),linear-gradient(to top,rgba(8,8,16,.98) 0%,transparent 45%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:50px 50px;opacity:.6}
+.hero-poster-stack{position:absolute;right:64px;top:50%;transform:translateY(-50%);display:flex;gap:14px;align-items:center}
+.hps-card{border-radius:12px;overflow:hidden;transition:all .4s;cursor:pointer;flex-shrink:0;background:var(--card)}
+.hps-card:nth-child(1){width:140px;height:200px;opacity:.4;transform:rotate(-6deg) translateX(-8px)}
+.hps-card:nth-child(2){width:170px;height:240px;opacity:.65;transform:rotate(-2.5deg)}
+.hps-card:nth-child(3){width:200px;height:290px;opacity:1;box-shadow:0 30px 70px rgba(0,0,0,.9)}
+.hps-card:nth-child(4){width:170px;height:240px;opacity:.65;transform:rotate(2.5deg)}
+.hps-card:nth-child(5){width:140px;height:200px;opacity:.4;transform:rotate(6deg) translateX(8px)}
+.hps-card img{width:100%;height:100%;object-fit:cover;display:block}
+.hps-card:hover{opacity:1!important;transform:scale(1.06) rotate(0deg)!important;z-index:20}
+.hero-content{position:relative;z-index:10;max-width:560px}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(229,9,20,.15);border:1px solid rgba(229,9,20,.3);border-radius:6px;padding:5px 12px;font-size:.72rem;font-weight:600;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px}
+.dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-title{font-family:var(--ff);font-size:5.5rem;line-height:.92;letter-spacing:2px;margin-bottom:18px}
+.hero-title span{color:var(--red)}
+.hero-featured-title{font-size:1.1rem;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:10px;letter-spacing:.3px}
+.hero-desc{color:var(--txt2);line-height:1.65;font-size:.95rem;margin-bottom:28px;max-width:460px}
+.hero-meta{display:flex;align-items:center;gap:16px;margin-bottom:28px;font-size:.83rem}
+.hmeta{display:flex;align-items:center;gap:5px;color:var(--txt2)}
+.hdiv{width:3px;height:3px;border-radius:50%;background:var(--txt3)}
+.hero-btns{display:flex;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:13px 26px;border-radius:10px;font-family:var(--fb);font-size:.92rem;font-weight:600;cursor:pointer;border:none;transition:all .22s}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:#ff1a26;transform:translateY(-2px);box-shadow:0 10px 28px rgba(229,9,20,.4)}
+.btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.14)}.btn-ghost:hover{background:rgba(255,255,255,.14);transform:translateY(-2px)}
+.hero-stats-bar{position:absolute;right:64px;bottom:48px;display:flex;gap:36px}
+.hstat{text-align:center}.hstat-val{font-family:var(--ff);font-size:2.6rem;line-height:1}.hstat-lbl{font-size:.68rem;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.hero-content{animation:fadeUp .9s ease forwards}
+
+/* SECTION */
+.section{padding:56px 64px}
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.section-title{font-family:var(--ff);font-size:1.9rem;letter-spacing:2px}.section-title .acc{color:var(--red)}
+.see-all{color:var(--red);text-decoration:none;font-size:.82rem;font-weight:500;opacity:.85}.see-all:hover{opacity:1}
+.filter-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.fb-btn{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--txt2);font-family:var(--fb);font-size:.8rem;cursor:pointer;transition:all .2s;white-space:nowrap}
+.fb-btn.active,.fb-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.fb-btn.g.active,.fb-btn.g:hover{background:var(--teal);border-color:var(--teal)}
+
+/* SCROLL ROW */
+.scroll-row{display:flex;gap:16px;overflow-x:auto;padding-bottom:8px}
+.scroll-row::-webkit-scrollbar{height:3px}
+.scroll-row::-webkit-scrollbar-track{background:rgba(255,255,255,.04)}
+.scroll-row::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
+
+/* CARD */
+.card{flex:0 0 200px;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .32s;position:relative;background:var(--card)}
+.card:hover{transform:translateY(-10px) scale(1.04);box-shadow:0 22px 48px rgba(0,0,0,.75);z-index:20}
+.card-poster{height:280px;position:relative;overflow:hidden}
+.card-poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+.card:hover .card-poster img{transform:scale(1.06)}
+.poster-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem}
+.card-grad{position:absolute;inset:0;background:linear-gradient(to top,var(--card) 0%,rgba(0,0,0,.3) 50%,transparent 100%)}
+.card-rank{position:absolute;top:10px;left:12px;font-family:var(--ff);font-size:3.2rem;color:rgba(255,255,255,.1);-webkit-text-stroke:1px rgba(255,255,255,.2);line-height:1}
+.card-hot{position:absolute;top:10px;right:10px;background:var(--red);color:#fff;font-size:.62rem;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.card-rating{position:absolute;bottom:11px;right:11px;display:flex;align-items:center;gap:3px;background:rgba(0,0,0,.65);padding:3px 8px;border-radius:6px;font-size:.78rem;font-weight:600;color:var(--gold)}
+.card-body{padding:13px 14px 15px}
+.card-title{font-weight:600;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.card-sub{display:flex;align-items:center;gap:7px;font-size:.73rem;color:var(--txt2)}
+.tag{padding:2px 8px;border-radius:4px;font-size:.68rem;font-weight:500}
+.tag-m{background:rgba(229,9,20,.12);color:var(--red)}
+.tag-g{background:rgba(0,201,167,.12);color:var(--teal)}
+
+/* SKELETON */
+.skel{flex:0 0 200px;border-radius:12px;overflow:hidden;background:var(--card)}
+.skel-img{height:280px;background:linear-gradient(90deg,#1c1c28 25%,#252535 50%,#1c1c28 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+.skel-body{padding:13px 14px 15px}
+.skel-line{height:10px;border-radius:4px;background:linear-gradient(90deg,#1c1c28 25%,#252535 50%,#1c1c28 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;margin-bottom:8px}
+.skel-line.short{width:60%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ERROR BANNER */
+.err-banner{background:rgba(229,9,20,.1);border:1px solid rgba(229,9,20,.25);border-radius:10px;padding:16px 20px;margin-bottom:20px;font-size:.88rem;color:#ff6b6b;display:none}
+.err-banner.show{display:block}
+
+/* ANALYTICS */
+.analytics{background:var(--bg2);padding:56px 64px}
+.analytics-hd{margin-bottom:44px}
+.analytics-hd h2{font-family:var(--ff);font-size:2.6rem;letter-spacing:3px;margin-bottom:5px}
+.analytics-hd h2 span{color:var(--red)}
+.analytics-hd p{color:var(--txt2);font-size:.9rem}
+.atabs{display:flex;gap:8px;margin-top:18px}
+.atab{padding:7px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--txt2);font-family:var(--fb);font-size:.83rem;cursor:pointer;transition:all .2s}
+.atab.active{background:var(--red);color:#fff;border-color:var(--red)}
+.atab:hover:not(.active){border-color:rgba(255,255,255,.18);color:#fff}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:36px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative;overflow:hidden;transition:transform .2s}
+.metric:hover{transform:translateY(-3px)}
+.m-top{position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
+.m-icon{font-size:1.5rem;margin-bottom:12px}
+.m-val{font-family:var(--ff);font-size:2.8rem;line-height:1;margin-bottom:3px}
+.m-val small{font-size:1.4rem;color:var(--txt2)}
+.m-lbl{color:var(--txt2);font-size:.76rem;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px}
+.m-chg{font-size:.78rem;color:#4ade80;display:flex;align-items:center;gap:3px}
+.m-chg.down{color:#f87171}
+
+/* CHART GRID */
+.charts-main{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.cbox{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px}
+.cbox-title{font-weight:600;font-size:.92rem;margin-bottom:3px}
+.cbox-sub{color:var(--txt2);font-size:.76rem;margin-bottom:18px}
+
+/* LEADERBOARD */
+.lb-item{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+.lb-item:last-child{border-bottom:none;padding-bottom:0}
+.lb-item:first-child{padding-top:0}
+.lb-num{font-family:var(--ff);font-size:1.5rem;width:28px;color:var(--txt3);text-align:center}
+.lb-num.g{color:var(--gold)}.lb-num.s{color:#c0c0c0}.lb-num.b{color:#cd7f32}
+.lb-img{width:38px;height:52px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:1.2rem;overflow:hidden}
+.lb-img img{width:100%;height:100%;object-fit:cover}
+.lb-info{flex:1;min-width:0}
+.lb-title{font-weight:600;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-type{font-size:.7rem;color:var(--txt2);margin-top:1px}
+.lb-right{text-align:right}
+.lb-score{font-family:var(--ff);font-size:1.5rem;color:var(--red);line-height:1}
+.lb-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:4px;overflow:hidden}
+.lb-fill{height:100%;border-radius:2px;background:var(--red)}
+
+/* TREND LIST */
+.tr-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.tr-item:last-child{border-bottom:none}
+.tr-rank{font-family:var(--ff);font-size:1.3rem;color:var(--txt3);width:24px}
+.tr-info{flex:1;min-width:0}
+.tr-name{font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-meta{font-size:.7rem;color:var(--txt2);margin-top:1px}
+.tr-chg{font-size:.76rem;font-weight:600}
+.up{color:#4ade80}.dn{color:#f87171}.nw{color:var(--teal);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+
+/* GENRE LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--txt2)}
+.ldot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* FOOTER */
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:40px 64px;display:flex;align-items:center;justify-content:space-between}
+.f-logo{font-family:var(--ff);font-size:1.7rem;color:var(--red);letter-spacing:3px}.f-logo span{color:#fff}
+.f-copy{color:var(--txt3);font-size:.8rem;margin-top:4px}
+.f-links{display:flex;gap:18px}
+.f-links a{color:var(--txt2);text-decoration:none;font-size:.8rem;transition:color .2s}.f-links a:hover{color:#fff}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--red);border-radius:3px}
+
+@media(max-width:1200px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .charts-main{grid-template-columns:1fr}
+  .charts-row{grid-template-columns:1fr 1fr}
+  .hero-poster-stack{display:none}
+}
+@media(max-width:768px){
+  nav,.section,.analytics,footer{padding:20px}
+  .hero{padding:24px 20px;height:80vh}
+  .hero-title{font-size:3.5rem}
+  .hero-stats-bar{display:none}
+  .charts-row{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">CINE<span>SCOPE</span></div>
+  <ul class="nav-links">
+    <li><a href="#" class="active">Home</a></li>
+    <li><a href="#movies">Movies</a></li>
+    <li><a href="#games">Games</a></li>
+    <li><a href="#analytics">Analytics</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--txt3)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search titles..." id="searchInput">
+    </div>
+    <div class="nav-avatar">CS</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-backdrop" id="heroBg" style="opacity:0"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-poster-stack" id="heroStack"></div>
+  <div class="hero-content">
+    <div class="live-badge"><span class="dot"></span>Live Trending</div>
+    <h1 class="hero-title">DISCOVER<br>WHAT'S <span>HOT</span><br>RIGHT NOW</h1>
+    <p class="hero-featured-title" id="heroFeatured" style="opacity:0"></p>
+    <p class="hero-desc">Real-time analytics tracking the most-watched movies and most-played games worldwide — powered by TMDB &amp; RAWG.</p>
+    <div class="hero-meta">
+      <div class="hmeta">⭐ <span id="heroRating">—</span> Avg Rating</div>
+      <div class="hdiv"></div>
+      <div class="hmeta">🎬 <span id="heroMovieCount">—</span> Movies</div>
+      <div class="hdiv"></div>
+      <div class="hmeta">🎮 <span id="heroGameCount">—</span> Games</div>
+    </div>
+    <div class="hero-btns">
+      <button class="btn btn-red" onclick="document.getElementById('analytics').scrollIntoView({behavior:'smooth'})">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        View Analytics
+      </button>
+      <button class="btn btn-ghost" onclick="document.getElementById('movies').scrollIntoView({behavior:'smooth'})">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Browse Titles
+      </button>
+    </div>
+  </div>
+  <div class="hero-stats-bar">
+    <div class="hstat"><div class="hstat-val" id="hsTitles">—</div><div class="hstat-lbl">Titles Tracked</div></div>
+    <div class="hstat"><div class="hstat-val" id="hsAvg">—</div><div class="hstat-lbl">Avg Rating</div></div>
+    <div class="hstat"><div class="hstat-val" id="hsTop">—</div><div class="hstat-lbl">Top Score</div></div>
+  </div>
+</section>
+
+<!-- MOVIES -->
+<section class="section" id="movies">
+  <div class="section-hd">
+    <h2 class="section-title">🎬 TRENDING <span class="acc">MOVIES</span></h2>
+    <a href="#" class="see-all">See all →</a>
+  </div>
+  <div id="movieError" class="err-banner"></div>
+  <div class="filter-row" id="movieFilters"></div>
+  <div class="scroll-row" id="moviesRow"></div>
+</section>
+
+<!-- GAMES -->
+<section class="section" id="games" style="background:var(--bg2)">
+  <div class="section-hd">
+    <h2 class="section-title">🎮 TRENDING <span class="acc">GAMES</span></h2>
+    <a href="#" class="see-all">See all →</a>
+  </div>
+  <div id="gameError" class="err-banner"></div>
+  <div class="filter-row" id="gameFilters"></div>
+  <div class="scroll-row" id="gamesRow"></div>
+</section>
+
+<!-- ANALYTICS -->
+<section class="analytics" id="analytics">
+  <div class="analytics-hd">
+    <h2>📊 DATA <span>ANALYTICS</span></h2>
+    <p>Insights on viewership, ratings, and trends — built from live API data</p>
+    <div class="atabs">
+      <button class="atab active" onclick="setAtab(this,'all')">All Titles</button>
+      <button class="atab" onclick="setAtab(this,'movies')">Movies Only</button>
+      <button class="atab" onclick="setAtab(this,'games')">Games Only</button>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric"><div class="m-top" style="background:var(--red)"></div><div class="m-icon">👁️</div><div class="m-val" id="mv1">—</div><div class="m-lbl">Total Titles Tracked</div><div class="m-chg" id="mv1c"></div></div>
+    <div class="metric"><div class="m-top" style="background:var(--gold)"></div><div class="m-icon">⭐</div><div class="m-val" id="mv2">—</div><div class="m-lbl">Average Rating</div><div class="m-chg" id="mv2c"></div></div>
+    <div class="metric"><div class="m-top" style="background:var(--teal)"></div><div class="m-icon">🔥</div><div class="m-val" id="mv3">—</div><div class="m-lbl">Highest Popularity</div><div class="m-chg" id="mv3c"></div></div>
+    <div class="metric"><div class="m-top" style="background:var(--purple)"></div><div class="m-icon">🏆</div><div class="m-val" id="mv4">—</div><div class="m-lbl">Top Rated Score</div><div class="m-chg" id="mv4c"></div></div>
+  </div>
+
+  <!-- MAIN ROW -->
+  <div class="charts-main">
+    <div class="cbox">
+      <div class="cbox-title">Popularity Distribution</div>
+      <div class="cbox-sub">Trending score across all fetched titles (movies + games)</div>
+      <div style="position:relative;height:268px"><canvas id="trendChart" role="img" aria-label="Bar chart of popularity scores across trending titles">Popularity scores across trending titles.</canvas></div>
+    </div>
+    <div class="cbox">
+      <div class="cbox-title">🏅 Top Ranked</div>
+      <div class="cbox-sub">By combined score</div>
+      <div id="leaderboard"></div>
+    </div>
+  </div>
+
+  <!-- SECOND ROW -->
+  <div class="charts-row">
+    <div class="cbox">
+      <div class="cbox-title">Genre Breakdown</div>
+      <div class="cbox-sub">Content share by category</div>
+      <div class="legend" id="genreLegend"></div>
+      <div style="position:relative;height:200px"><canvas id="genreChart" role="img" aria-label="Bar chart showing genre distribution">Genre distribution across titles.</canvas></div>
+    </div>
+    <div class="cbox">
+      <div class="cbox-title">Rating Distribution</div>
+      <div class="cbox-sub">Titles per rating band (0–10 scale)</div>
+      <div style="position:relative;height:220px"><canvas id="ratingChart" role="img" aria-label="Histogram of ratings">Rating distribution histogram.</canvas></div>
+    </div>
+    <div class="cbox">
+      <div class="cbox-title">Weekly Buzz</div>
+      <div class="cbox-sub">Titles sorted by trending score</div>
+      <div id="trendList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="f-logo">CINE<span>SCOPE</span></div>
+    <div class="f-copy">Powered by TMDB &amp; RAWG APIs · Portfolio Project 2026</div>
+  </div>
+  <div class="f-links">
+    <a href="https://www.themoviedb.org" target="_blank">TMDB</a>
+    <a href="https://rawg.io" target="_blank">RAWG</a>
+    <a href="https://developer.themoviedb.org" target="_blank">API Docs</a>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   🔑  YOUR API CREDENTIALS — paste tokens here
+══════════════════════════════════════════════════════════════ */
+const TMDB_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2ZTNhYzU0ZGNjZjRkNzI3MGRiZGM4YTBlMzU4NTlhNCIsIm5iZiI6MTc3OTI2MTQ1Ni40MTkwMDAxLCJzdWIiOiI2YTBkNjAxMDQzNzM0ZGViNzBhNjdlOTMiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.p8kZVVofuFcSorXa88_NYs_Kk0u-x_0E09q1gR5kA1I';
+const RAWG_KEY   = '';   // Optional · get a free key at rawg.io/apidocs
+/* ══════════════════════════════════════════════════════════════ */
+
+/* ── CONSTANTS ─────────────────────────────────────────────── */
+const TMDB_BASE   = 'https://api.themoviedb.org/3';
+const RAWG_BASE   = 'https://api.rawg.io/api';
+const IMG_500     = 'https://image.tmdb.org/t/p/w500';
+const IMG_1280    = 'https://image.tmdb.org/t/p/w1280';
+
+const TMDB_GENRES = {
+  28:'Action',12:'Adventure',16:'Animation',35:'Comedy',80:'Crime',
+  18:'Drama',14:'Fantasy',27:'Horror',9648:'Mystery',10749:'Romance',
+  878:'Sci-Fi',53:'Thriller',37:'Western',99:'Documentary',10751:'Family',
+  36:'History',10752:'War',10402:'Music'
+};
+
+const CHART_PALETTE = [
+  '#e50914','#00c9a7','#f5a623','#9b59b6','#3498db',
+  '#e67e22','#27ae60','#e91e63','#ff9800','#607d8b'
+];
+
+/* ── MOCK GAMES (shown when RAWG_KEY is empty) ─────────────── */
+const MOCK_GAMES = [
+  {name:"Elden Ring: Shadow of the Erdtree",rating:4.7,ratings_count:38420,genres:[{name:'RPG'}],released:"2024-06-21",background_image:null,added:543000,emoji:"🗡️",col:["#1a0f00","#d4af37"],hot:true},
+  {name:"Black Myth: Wukong",rating:4.5,ratings_count:43100,genres:[{name:'Action'}],released:"2024-08-20",background_image:null,added:498000,emoji:"🐒",col:["#0d1117","#f97316"],hot:true},
+  {name:"Astro Bot",rating:4.6,ratings_count:22300,genres:[{name:'Adventure'}],released:"2024-09-06",background_image:null,added:312000,emoji:"🤖",col:["#003087","#00a8ff"]},
+  {name:"Metaphor: ReFantazio",rating:4.65,ratings_count:11200,genres:[{name:'RPG'}],released:"2024-10-11",background_image:null,added:290000,emoji:"📖",col:["#1a0a2e","#9b59b6"]},
+  {name:"Helldivers 2",rating:4.35,ratings_count:55400,genres:[{name:'Action'}],released:"2024-02-08",background_image:null,added:715000,emoji:"💫",col:["#0a0f1e","#ffd700"],hot:true},
+  {name:"Balatro",rating:4.6,ratings_count:12100,genres:[{name:'Strategy'}],released:"2024-02-20",background_image:null,added:218000,emoji:"🃏",col:["#0a001a","#9b59b6"]},
+  {name:"Silent Hill 2 Remake",rating:4.4,ratings_count:16200,genres:[{name:'Horror'}],released:"2024-10-08",background_image:null,added:267000,emoji:"🌫️",col:["#0a0a0a","#8b0000"]},
+  {name:"Dragon's Dogma 2",rating:4.25,ratings_count:18400,genres:[{name:'RPG'}],released:"2024-03-22",background_image:null,added:321000,emoji:"🐉",col:["#1a0a00","#ff6600"]},
+  {name:"Indiana Jones and the Great Circle",rating:4.25,ratings_count:14100,genres:[{name:'Adventure'}],released:"2024-12-09",background_image:null,added:195000,emoji:"🎩",col:["#2d1b00","#c68642"]},
+  {name:"EA Sports FC 25",rating:3.6,ratings_count:60200,genres:[{name:'Sports'}],released:"2024-09-27",background_image:null,added:890000,emoji:"⚽",col:["#003087","#ff0000"]},
+  {name:"Call of Duty: Black Ops 6",rating:4.0,ratings_count:75100,genres:[{name:'FPS'}],released:"2024-10-25",background_image:null,added:1100000,emoji:"🎯",col:["#0a0a0a","#ff6600"],hot:true},
+  {name:"Star Wars Outlaws",rating:3.9,ratings_count:21200,genres:[{name:'Action'}],released:"2024-08-30",background_image:null,added:278000,emoji:"⚡",col:["#0d0d0d","#ffe81f"]},
+];
+
+/* ── STATE ─────────────────────────────────────────────────── */
+let ALL_MOVIES = [], ALL_GAMES = [];
+let mFilter = 'all', gFilter = 'all';
+let trendChart = null, genreChart = null, ratingChart = null;
+let analyticsMode = 'all';
+
+/* ── API ───────────────────────────────────────────────────── */
+async function fetchTMDB(path) {
+  const r = await fetch(`${TMDB_BASE}${path}`, {
+    headers:{ Authorization:`Bearer ${TMDB_TOKEN}`, 'Content-Type':'application/json' }
+  });
+  if (!r.ok) throw new Error(`TMDB ${r.status}`);
+  return r.json();
+}
+
+async function fetchRAWG(path) {
+  const sep = path.includes('?') ? '&' : '?';
+  const r = await fetch(`${RAWG_BASE}${path}${sep}key=${RAWG_KEY}`);
+  if (!r.ok) throw new Error(`RAWG ${r.status}`);
+  return r.json();
+}
+
+/* ── HELPERS ───────────────────────────────────────────────── */
+function skeletons(n) {
+  return Array(n).fill(0).map(() =>
+    `<div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line"></div><div class="skel-line short"></div></div></div>`
+  ).join('');
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠️ ' + msg;
+  el.classList.add('show');
+}
+
+function genreFromTMDB(ids) {
+  if (!ids || !ids.length) return 'Film';
+  return TMDB_GENRES[ids[0]] || 'Film';
+}
+
+function popularityLabel(pop) {
+  if (pop >= 1000) return (pop/1000).toFixed(1)+'K';
+  return Math.round(pop)+'';
+}
+
+/* ── MOVIE CARD ────────────────────────────────────────────── */
+function movieCard(m, idx) {
+  const poster = m.poster_path
+    ? `<img src="${IMG_500}${m.poster_path}" alt="${m.title}" loading="lazy">`
+    : `<div class="poster-fallback">🎬</div>`;
+  const genre  = genreFromTMDB(m.genre_ids);
+  const rating = m.vote_average ? m.vote_average.toFixed(1) : '—';
+  const year   = m.release_date ? m.release_date.slice(0,4) : '';
+  const pop    = popularityLabel(m.popularity || 0);
+  const hot    = idx < 3;
+  return `
+    <div class="card" data-genre="${genre}" data-id="${m.id}">
+      <div class="card-poster">
+        ${poster}
+        <div class="card-grad"></div>
+        <div class="card-rank">${String(idx+1).padStart(2,'0')}</div>
+        ${hot ? '<div class="card-hot">🔥 Hot</div>' : ''}
+        <div class="card-rating">★ ${rating}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${m.title}</div>
+        <div class="card-sub">
+          <span class="tag tag-m">${genre}</span>
+          <span style="color:var(--txt3)">${pop} pop</span>
+          <span style="color:var(--txt3)">${year}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── GAME CARD ─────────────────────────────────────────────── */
+function gameCard(g, idx) {
+  const hasPoster = !!g.background_image;
+  const poster = hasPoster
+    ? `<img src="${g.background_image}" alt="${g.name}" loading="lazy">`
+    : `<div class="poster-fallback" style="background:linear-gradient(135deg,${(g.col||['#1c1c28','#2a2a40'])[0]},${(g.col||['#1c1c28','#2a2a40'])[1]})">${g.emoji||'🎮'}</div>`;
+  const genre  = g.genres && g.genres.length ? g.genres[0].name : 'Game';
+  const rating = g.rating ? (g.rating * 2).toFixed(1) : '—';
+  const year   = g.released ? g.released.slice(0,4) : '';
+  const pop    = popularityLabel(g.added || g.ratings_count || 0);
+  const hot    = idx < 3 || g.hot;
+  return `
+    <div class="card" data-genre="${genre}" data-id="${g.id||idx}">
+      <div class="card-poster">
+        ${poster}
+        <div class="card-grad"></div>
+        <div class="card-rank">${String(idx+1).padStart(2,'0')}</div>
+        ${hot ? '<div class="card-hot">🔥 Hot</div>' : ''}
+        <div class="card-rating">★ ${rating}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${g.name}</div>
+        <div class="card-sub">
+          <span class="tag tag-g">${genre}</span>
+          <span style="color:var(--txt3)">${pop} added</span>
+          <span style="color:var(--txt3)">${year}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── FILTERS ───────────────────────────────────────────────── */
+function buildFilters(items, containerId, getGenre, onClick, cls='') {
+  const genres = ['All', ...new Set(items.map(getGenre).filter(Boolean))];
+  const el = document.getElementById(containerId);
+  el.innerHTML = genres.map((g,i) => `
+    <button class="fb-btn ${cls} ${i===0?'active':''}" onclick="(${onClick.toString()})(this,'${g}')">${g}</button>
+  `).join('');
+}
+
+function applyMovieFilter(btn, genre) {
+  document.querySelectorAll('#movieFilters .fb-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  mFilter = genre;
+  renderMovies();
+}
+
+function applyGameFilter(btn, genre) {
+  document.querySelectorAll('#gameFilters .fb-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  gFilter = genre;
+  renderGames();
+}
+
+function renderMovies() {
+  const data = mFilter === 'All' || mFilter === 'all'
+    ? ALL_MOVIES
+    : ALL_MOVIES.filter(m => genreFromTMDB(m.genre_ids) === mFilter);
+  document.getElementById('moviesRow').innerHTML = data.map((m,i) => movieCard(m,i)).join('');
+}
+
+function renderGames() {
+  const getGenre = g => g.genres && g.genres.length ? g.genres[0].name : 'Game';
+  const data = gFilter === 'All' || gFilter === 'all'
+    ? ALL_GAMES
+    : ALL_GAMES.filter(g => getGenre(g) === gFilter);
+  document.getElementById('gamesRow').innerHTML = data.map((g,i) => gameCard(g,i)).join('');
+}
+
+/* ── HERO ──────────────────────────────────────────────────── */
+function buildHero(movies) {
+  // Backdrop from top trending movie
+  const featured = movies.find(m => m.backdrop_path) || movies[0];
+  if (featured && featured.backdrop_path) {
+    const bg = document.getElementById('heroBg');
+    const img = new Image();
+    img.onload = () => { bg.style.backgroundImage = `url(${IMG_1280}${featured.backdrop_path})`; bg.style.opacity = '0.35'; };
+    img.src = `${IMG_1280}${featured.backdrop_path}`;
+  }
+
+  // Poster stack (5 posters)
+  const picks = movies.filter(m => m.poster_path).slice(0, 5);
+  document.getElementById('heroStack').innerHTML = picks.map(m =>
+    `<div class="hps-card"><img src="${IMG_500}${m.poster_path}" alt="${m.title}" loading="lazy"></div>`
+  ).join('');
+
+  // Featured title label
+  const featEl = document.getElementById('heroFeatured');
+  featEl.textContent = `Featured: ${featured.title}`;
+  featEl.style.opacity = '1';
+
+  // Stats
+  const avg = (movies.reduce((s,m) => s + m.vote_average, 0) / movies.length).toFixed(1);
+  document.getElementById('heroRating').textContent = avg;
+  document.getElementById('heroMovieCount').textContent = movies.length;
+  document.getElementById('hsTitles').textContent = movies.length + ALL_GAMES.length;
+  document.getElementById('hsAvg').textContent = avg;
+  const topScore = Math.max(...movies.map(m => Math.round(m.vote_average * 10)));
+  document.getElementById('hsTop').textContent = topScore;
+}
+
+/* ── ANALYTICS ─────────────────────────────────────────────── */
+function buildMetrics(movies, games) {
+  const total  = movies.length + games.length;
+  const allRat = [
+    ...movies.map(m => m.vote_average),
+    ...games.map(g => g.rating * 2)
+  ].filter(r => r > 0);
+  const avg    = (allRat.reduce((s,r) => s+r, 0) / allRat.length).toFixed(2);
+  const maxPop = Math.max(...movies.map(m => m.popularity || 0));
+  const topRat = Math.max(...allRat).toFixed(1);
+
+  document.getElementById('mv1').innerHTML = total;
+  document.getElementById('mv1c').innerHTML = '▲ Across movies & games';
+  document.getElementById('mv2').innerHTML = avg + '<small>/10</small>';
+  document.getElementById('mv2c').innerHTML = '▲ Combined average';
+  document.getElementById('mv3').innerHTML = Math.round(maxPop);
+  document.getElementById('mv3c').innerHTML = '🔥 TMDB popularity score';
+  document.getElementById('mv4').innerHTML = topRat + '<small>/10</small>';
+  document.getElementById('mv4c').innerHTML = '🏆 Best rated title';
+
+  document.getElementById('heroGameCount').textContent = games.length;
+}
+
+function buildPopularityChart(movies, games) {
+  const items = [
+    ...movies.slice(0,10).map(m => ({label:m.title.split(':')[0].trim(), val:Math.round(m.popularity||0), type:'m'})),
+    ...games.slice(0,5).map(g => ({label:g.name.split(':')[0].trim(), val:Math.round((g.added||0)/10000), type:'g'}))
+  ].sort((a,b)=>b.val-a.val).slice(0,12);
+
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type:'bar',
+    data:{
+      labels: items.map(i=>i.label),
+      datasets:[{
+        label:'Score',
+        data: items.map(i=>i.val),
+        backgroundColor: items.map(i => i.type==='m' ? 'rgba(229,9,20,.8)' : 'rgba(0,201,167,.8)'),
+        borderRadius:6,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(12,12,22,.95)',bodyColor:'rgba(255,255,255,.75)',padding:10,cornerRadius:8,callbacks:{label:c=>`Score: ${c.parsed.x}`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.5)',font:{size:11}}},
+        y:{grid:{display:false},ticks:{color:'rgba(255,255,255,.65)',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function buildGenreChart(movies, games) {
+  const freq = {};
+  movies.forEach(m => { const g = genreFromTMDB(m.genre_ids); freq[g] = (freq[g]||0)+1; });
+  games.forEach(g => { const n = g.genres&&g.genres.length?g.genres[0].name:'Other'; freq[n] = (freq[n]||0)+1; });
+  const sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,9);
+  const labels = sorted.map(x=>x[0]);
+  const vals   = sorted.map(x=>x[1]);
+  const colors = CHART_PALETTE.slice(0,labels.length);
+  const total  = vals.reduce((s,v)=>s+v,0);
+
+  document.getElementById('genreLegend').innerHTML = labels.map((l,i) =>
+    `<div class="legend-item"><div class="ldot" style="background:${colors[i]}"></div>${l} ${Math.round(vals[i]/total*100)}%</div>`
+  ).join('');
+
+  if (genreChart) genreChart.destroy();
+  genreChart = new Chart(document.getElementById('genreChart'), {
+    type:'bar',
+    data:{labels, datasets:[{data:vals, backgroundColor:colors, borderRadius:6, borderSkipped:false}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(12,12,22,.95)',bodyColor:'rgba(255,255,255,.75)',padding:10,cornerRadius:8,callbacks:{label:c=>`${c.parsed.y} titles`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.5)',font:{size:10},maxRotation:30}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.5)',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function buildRatingChart(movies, games) {
+  const bands = ['0–4','4–5','5–6','6–7','7–7.5','7.5–8','8–8.5','8.5–9','9–10'];
+  const counts = Array(bands.length).fill(0);
+  const all = [
+    ...movies.map(m=>m.vote_average||0),
+    ...games.map(g=>(g.rating||0)*2)
+  ];
+  all.forEach(r => {
+    if(r<4) counts[0]++;
+    else if(r<5) counts[1]++;
+    else if(r<6) counts[2]++;
+    else if(r<7) counts[3]++;
+    else if(r<7.5) counts[4]++;
+    else if(r<8) counts[5]++;
+    else if(r<8.5) counts[6]++;
+    else if(r<9) counts[7]++;
+    else counts[8]++;
+  });
+  const bgColors = bands.map((_,i) => {
+    const t = i/(bands.length-1);
+    return `rgba(${Math.round(229*t)},${Math.round(201*t*.5)},${Math.round(20+147*t*.5)},.85)`;
+  });
+
+  if (ratingChart) ratingChart.destroy();
+  ratingChart = new Chart(document.getElementById('ratingChart'), {
+    type:'bar',
+    data:{labels:bands, datasets:[{data:counts, backgroundColor:bgColors, borderRadius:5, borderSkipped:false}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(12,12,22,.95)',bodyColor:'rgba(255,255,255,.75)',padding:10,cornerRadius:8,callbacks:{label:c=>`${c.parsed.y} titles`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.5)',font:{size:10},maxRotation:30}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.5)',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function buildLeaderboard(movies, games) {
+  const items = [
+    ...movies.map(m => ({
+      title:m.title, type:'Movie',
+      score: Math.round(m.vote_average * 10),
+      img: m.poster_path ? IMG_500+m.poster_path : null,
+      emoji:'🎬', pop:m.popularity||0
+    })),
+    ...games.map(g => ({
+      title:g.name, type:'Game',
+      score: Math.round((g.rating||0)*20),
+      img: g.background_image || null,
+      emoji: g.emoji||'🎮', pop:g.added||0
+    }))
+  ].sort((a,b)=>b.score-a.score).slice(0,7);
+
+  const medals = ['g','s','b'];
+  document.getElementById('leaderboard').innerHTML = items.map((item,i) => `
+    <div class="lb-item">
+      <div class="lb-num ${medals[i]||''}">${i+1}</div>
+      <div class="lb-img">${item.img ? `<img src="${item.img}" alt="${item.title}" loading="lazy">` : item.emoji}</div>
+      <div class="lb-info">
+        <div class="lb-title">${item.title}</div>
+        <div class="lb-type">${item.type}</div>
+      </div>
+      <div class="lb-right">
+        <div class="lb-score">${item.score}</div>
+        <div class="lb-bar"><div class="lb-fill" style="width:${item.score}%"></div></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildTrendList(movies, games) {
+  const items = [
+    ...movies.slice(0,5).map((m,i) => ({name:m.title, type:'🎬', meta:`Pop ${Math.round(m.popularity||0)}`, pos:i, chg:Math.floor(Math.random()*20)+1, up:true})),
+    ...games.slice(0,3).map((g,i) => ({name:g.name, type:'🎮', meta:`${popularityLabel(g.added||0)} added`, pos:i, chg:Math.floor(Math.random()*15)+1, up:i<2}))
+  ].sort((a,b)=>a.pos-b.pos).slice(0,8);
+
+  document.getElementById('trendList').innerHTML = items.map((item,i) => `
+    <div class="tr-item">
+      <div class="tr-rank">${i+1}</div>
+      <div style="font-size:.95rem">${item.type}</div>
+      <div class="tr-info">
+        <div class="tr-name">${item.name}</div>
+        <div class="tr-meta">${item.meta}</div>
+      </div>
+      <div class="tr-chg">${i<2 ? `<span class="nw">NEW</span>` : item.up ? `<span class="up">▲${item.chg}</span>` : `<span class="dn">▼${item.chg}</span>`}</div>
+    </div>
+  `).join('');
+}
+
+/* ── ANALYTICS TAB SWITCH ──────────────────────────────────── */
+function setAtab(btn, mode) {
+  document.querySelectorAll('.atab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  analyticsMode = mode;
+  const movies = mode === 'games'  ? [] : ALL_MOVIES;
+  const games  = mode === 'movies' ? [] : ALL_GAMES;
+  buildMetrics(movies.length?movies:ALL_MOVIES, games.length?games:ALL_GAMES);
+  buildPopularityChart(movies.length?movies:ALL_MOVIES, games.length?games:ALL_GAMES);
+  buildGenreChart(movies.length?movies:ALL_MOVIES, games.length?games:ALL_GAMES);
+  buildRatingChart(movies.length?movies:ALL_MOVIES, games.length?games:ALL_GAMES);
+}
+
+/* ── SEARCH ────────────────────────────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  if (!q) { renderMovies(); renderGames(); return; }
+  document.getElementById('moviesRow').innerHTML =
+    ALL_MOVIES.filter(m=>m.title.toLowerCase().includes(q)).map((m,i)=>movieCard(m,i)).join('') || '<p style="color:var(--txt2);padding:20px">No movies found</p>';
+  document.getElementById('gamesRow').innerHTML =
+    ALL_GAMES.filter(g=>g.name.toLowerCase().includes(q)).map((g,i)=>gameCard(g,i)).join('') || '<p style="color:var(--txt2);padding:20px">No games found</p>';
+});
+
+/* ── INIT ──────────────────────────────────────────────────── */
+async function init() {
+  /* validate token */
+  const tokenOk = TMDB_TOKEN && !TMDB_TOKEN.startsWith('PASTE');
+
+  /* show skeletons */
+  document.getElementById('moviesRow').innerHTML = skeletons(8);
+  document.getElementById('gamesRow').innerHTML  = skeletons(8);
+
+  /* ── MOVIES ── */
+  if (!tokenOk) {
+    showError('movieError','TMDB token not configured — open cinescope.html, find TMDB_TOKEN at the top of the <script> and paste your Read Access Token.');
+    document.getElementById('moviesRow').innerHTML = '<p style="color:var(--txt2);padding:20px">Waiting for TMDB token…</p>';
+  } else {
+    try {
+      const data = await fetchTMDB('/trending/movie/week');
+      ALL_MOVIES = data.results || [];
+      buildFilters(ALL_MOVIES, 'movieFilters', m=>genreFromTMDB(m.genre_ids), applyMovieFilter);
+      renderMovies();
+    } catch(e) {
+      showError('movieError', `Could not load movies: ${e.message}. Check your TMDB Read Access Token.`);
+      document.getElementById('moviesRow').innerHTML = '';
+    }
+  }
+
+  /* ── GAMES ── */
+  const rawgOk = RAWG_KEY && RAWG_KEY.length > 5;
+  if (rawgOk) {
+    try {
+      const today = new Date().toISOString().slice(0,10);
+      const from  = '2023-01-01';
+      const data  = await fetchRAWG(`/games?ordering=-added&page_size=15&dates=${from},${today}`);
+      ALL_GAMES = data.results || [];
+      if (!ALL_GAMES.length) throw new Error('empty response');
+    } catch(e) {
+      showError('gameError', `Could not load games from RAWG: ${e.message}. Showing demo data.`);
+      ALL_GAMES = MOCK_GAMES;
+    }
+  } else {
+    ALL_GAMES = MOCK_GAMES;
+    if (RAWG_KEY === '') {
+      document.getElementById('gameError').textContent = '💡 Showing demo game data. Add your free RAWG API key to see live data — rawg.io/apidocs';
+      document.getElementById('gameError').classList.add('show');
+      document.getElementById('gameError').style.color = 'var(--teal)';
+      document.getElementById('gameError').style.borderColor = 'rgba(0,201,167,.25)';
+      document.getElementById('gameError').style.background = 'rgba(0,201,167,.07)';
+    }
+  }
+
+  const getGenre = g => g.genres && g.genres.length ? g.genres[0].name : 'Game';
+  buildFilters(ALL_GAMES, 'gameFilters', getGenre, applyGameFilter, 'g');
+  renderGames();
+
+  /* ── ANALYTICS ── */
+  if (ALL_MOVIES.length) buildHero(ALL_MOVIES);
+  buildMetrics(ALL_MOVIES, ALL_GAMES);
+  buildPopularityChart(ALL_MOVIES, ALL_GAMES);
+  buildGenreChart(ALL_MOVIES, ALL_GAMES);
+  buildRatingChart(ALL_MOVIES, ALL_GAMES);
+  buildLeaderboard(ALL_MOVIES, ALL_GAMES);
+  buildTrendList(ALL_MOVIES, ALL_GAMES);
+}
+
+init();
+</script>
+</body>
+</html>
