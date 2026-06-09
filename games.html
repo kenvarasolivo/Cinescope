@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineScope — Game Analytics</title>
+<meta name="description" content="Trending game analytics: player counts, Metacritic scores, platforms and genre trends from live RAWG data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav" id="nav">
+  <a class="brand" href="index.html"><span class="dot"></span>CINE<span>SCOPE</span></a>
+  <nav class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="movies.html">Movies</a>
+    <a href="games.html">Games</a>
+  </nav>
+  <div class="nav-actions">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search games…">
+    </div>
+    <button class="menu-toggle" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- HEADER -->
+<header class="page-head">
+  <div class="page-head-bg" id="headBg"></div>
+  <div class="wrap">
+    <span class="badge"><span class="pulse"></span>Live · RAWG</span>
+    <h1>Trending <span class="accent-g">Games</span></h1>
+    <p>The titles dominating libraries right now — explored through player adoption, Metacritic, platforms and genre trends.</p>
+  </div>
+</header>
+
+<!-- KPIs -->
+<section class="section" style="padding-top:18px;padding-bottom:24px">
+  <div class="wrap">
+    <div id="gameError" class="banner"></div>
+    <div class="kpi-grid">
+      <div class="kpi reveal"><div class="kpi-bar" style="background:var(--grad-game)"></div>
+        <div class="kpi-top"><div class="kpi-icon">🎮</div></div>
+        <div class="kpi-val" id="kTitles">—</div><div class="kpi-lbl">Games tracked</div>
+        <div class="kpi-chg up" id="kTitlesSub">trending now</div></div>
+      <div class="kpi reveal"><div class="kpi-bar" style="background:var(--gold)"></div>
+        <div class="kpi-top"><div class="kpi-icon">⭐</div></div>
+        <div class="kpi-val" id="kAvg">—<small>/10</small></div><div class="kpi-lbl">Average rating</div>
+        <div class="kpi-chg" id="kAvgSub">player score</div></div>
+      <div class="kpi reveal"><div class="kpi-bar" style="background:var(--violet)"></div>
+        <div class="kpi-top"><div class="kpi-icon">🏅</div></div>
+        <div class="kpi-val" id="kMeta">—</div><div class="kpi-lbl">Avg Metacritic</div>
+        <div class="kpi-chg" id="kMetaSub">critic score</div></div>
+      <div class="kpi reveal"><div class="kpi-bar" style="background:var(--movie)"></div>
+        <div class="kpi-top"><div class="kpi-icon">👥</div></div>
+        <div class="kpi-val" id="kAdded">—</div><div class="kpi-lbl">Total players reached</div>
+        <div class="kpi-chg" id="kAddedSub">library adds</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CATALOG -->
+<section class="section" style="padding-top:8px">
+  <div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow">Catalog</div><h2 class="h-section">Browse trending games</h2></div>
+    </div>
+    <div class="toolbar">
+      <div class="chips" id="genreChips"></div>
+      <select class="select" id="sortSel">
+        <option value="added">Sort: Most added</option>
+        <option value="rating">Sort: Rating</option>
+        <option value="metacritic">Sort: Metacritic</option>
+        <option value="release">Sort: Newest</option>
+      </select>
+    </div>
+    <div class="card-grid" id="gameGrid"></div>
+  </div>
+</section>
+
+<!-- ANALYTICS -->
+<section class="section" style="background:var(--bg-soft);border-top:1px solid var(--border)">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div><div class="eyebrow">Deep dive</div><h2 class="h-section">Game analytics</h2>
+        <p class="sub">Every chart is computed live from the titles above.</p></div>
+    </div>
+
+    <div class="grid-analytics">
+      <div class="panel reveal">
+        <div class="panel-head">
+          <div><div class="panel-title">🖥️ Platform reach</div>
+          <div class="panel-sub">How many trending titles ship on each platform</div></div>
+          <span class="panel-tag">Coverage</span>
+        </div>
+        <div class="chart-box" style="height:320px"><canvas id="platformChart"></canvas></div>
+      </div>
+      <div class="panel reveal">
+        <div class="panel-head"><div><div class="panel-title">👥 Most played</div>
+          <div class="panel-sub">By library adds</div></div></div>
+        <div id="gameLeaderboard"></div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top:18px">
+      <div class="panel reveal">
+        <div class="panel-head"><div><div class="panel-title">🎭 Genre mix</div>
+          <div class="panel-sub">Share of trending titles</div></div></div>
+        <div class="chart-box" style="height:240px"><canvas id="genreChart"></canvas></div>
+      </div>
+      <div class="panel reveal">
+        <div class="panel-head"><div><div class="panel-title">⭐ Rating distribution</div>
+          <div class="panel-sub">Games per rating band (0–10)</div></div></div>
+        <div class="chart-box" style="height:240px"><canvas id="ratingChart"></canvas></div>
+      </div>
+      <div class="panel reveal">
+        <div class="panel-head"><div><div class="panel-title">📅 Release timeline</div>
+          <div class="panel-sub">Trending games by year</div></div></div>
+        <div class="chart-box" style="height:240px"><canvas id="yearChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel reveal" style="margin-top:18px">
+      <div class="panel-head"><div><div class="panel-title">🏅 Critics vs Players</div>
+        <div class="panel-sub">Metacritic (critics) against player rating — where do they agree?</div></div>
+        <span class="panel-tag">Scatter</span></div>
+      <div class="chart-box" style="height:320px"><canvas id="metaChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a class="brand" href="index.html"><span class="dot"></span>CINE<span>SCOPE</span></a>
+      <p>Real-time entertainment trend analytics, built on public TMDB &amp; RAWG data. A portfolio project.</p>
+    </div>
+    <div class="footer-cols">
+      <div class="fcol"><h4>Explore</h4>
+        <a href="index.html">Home</a><a href="movies.html">Movies</a><a href="games.html">Games</a></div>
+      <div class="fcol"><h4>Data sources</h4>
+        <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>
+        <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a></div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 CineScope. Data via TMDB &amp; RAWG.</span>
+    <span>Built with Chart.js · Deployed on Vercel</span>
+  </div>
+</footer>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/js/games.js"></script>
+</body>
+</html>
