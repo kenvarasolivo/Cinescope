@@ -1,7 +1,7 @@
 /* ============================================================
    GAMES PAGE
    ============================================================ */
-let GAMES = [], filterGenre = 'All', sortBy = 'added', searchQ = '';
+let GAMES = [], filterGenre = 'All', sortBy = 'rating', searchQ = '';
 let charts = {};
 
 async function loadGames(){

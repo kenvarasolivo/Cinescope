@@ -1,7 +1,7 @@
 /* ============================================================
    MOVIES PAGE
    ============================================================ */
-let MOVIES = [], filterGenre = 'All', sortBy = 'popularity', searchQ = '';
+let MOVIES = [], filterGenre = 'All', sortBy = 'votes', searchQ = '';
 let charts = {};
 
 async function loadMovies(){
