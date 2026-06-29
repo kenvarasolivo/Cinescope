@@ -248,7 +248,7 @@ canvas{max-width:100%}
    ============================================================ */
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:22px}
 .scroller{display:flex;gap:18px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory}
-.scroller .card{flex:0 0 188px;scroll-snap-align:start}
+.scroller .card,.scroller .skel{flex:0 0 188px;scroll-snap-align:start}
 
 .card{
   position:relative;background:var(--bg-elev);border:1px solid var(--border);

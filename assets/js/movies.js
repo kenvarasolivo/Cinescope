@@ -6,6 +6,7 @@ let charts = {};
 
 async function loadMovies(){
   document.getElementById('movieGrid').innerHTML = skeletons(12);
+  document.getElementById('newTrending').innerHTML = skeletons(8);
   try{
     // two pages of weekly trending → ~40 films for richer stats
     MOVIES = await fetchTMDBPages('/trending/movie/week', 2);
@@ -17,9 +18,21 @@ async function loadMovies(){
   }
   buildHeaderBg();
   buildKPIs();
+  buildNewTrending();
   buildChips();
   renderGrid();
   buildAnalytics();
+}
+
+/* ---- NEW & TRENDING (recent releases ranked by relevance) ---- */
+function buildNewTrending(){
+  const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 18);
+  let pool = MOVIES.filter(m => m.release_date && new Date(m.release_date) >= cutoff);
+  if(pool.length < 6) pool = [...MOVIES];
+  pool.sort((a,b) => (b.popularity||0) - (a.popularity||0));
+  const items = pool.slice(0, 12);
+  document.getElementById('newTrending').innerHTML =
+    items.length ? items.map((m,i) => movieCard(m,i)).join('') : '<div class="empty">No new releases trending.</div>';
 }
 
 function buildHeaderBg(){

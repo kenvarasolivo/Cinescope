@@ -6,6 +6,7 @@ let charts = {};
 
 async function loadGames(){
   document.getElementById('gameGrid').innerHTML = skeletons(12);
+  document.getElementById('newTrending').innerHTML = skeletons(8);
   try{
     const data = await fetchRAWG('/games?ordering=-added&page_size=40&dates=2023-01-01,2026-12-31');
     GAMES = data.results || [];
@@ -16,9 +17,21 @@ async function loadGames(){
   }
   buildHeaderBg();
   buildKPIs();
+  buildNewTrending();
   buildChips();
   renderGrid();
   buildAnalytics();
+}
+
+/* ---- NEW & TRENDING (recent releases ranked by relevance) ---- */
+function buildNewTrending(){
+  const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 18);
+  let pool = GAMES.filter(g => g.released && new Date(g.released) >= cutoff);
+  if(pool.length < 6) pool = [...GAMES];
+  pool.sort((a,b) => (b.added||0) - (a.added||0));
+  const items = pool.slice(0, 12);
+  document.getElementById('newTrending').innerHTML =
+    items.length ? items.map((g,i) => gameCard(g,i)).join('') : '<div class="empty">No new releases trending.</div>';
 }
 
 function buildHeaderBg(){
