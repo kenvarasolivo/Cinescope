@@ -164,23 +164,67 @@ function gameCard(g, idx){
 function initChartTheme(){
   if(typeof Chart === 'undefined') return;
   Chart.defaults.font.family = "'Inter',sans-serif";
-  Chart.defaults.font.size = 11;
-  Chart.defaults.color = '#9b9bb4';
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = '#a4a4bd';
   Chart.defaults.plugins.legend.display = false;
-  Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(11,11,20,.96)';
+  Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(12,12,21,.97)';
   Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,.12)';
   Chart.defaults.plugins.tooltip.borderWidth = 1;
-  Chart.defaults.plugins.tooltip.titleColor = '#f4f4fb';
-  Chart.defaults.plugins.tooltip.bodyColor = '#9b9bb4';
-  Chart.defaults.plugins.tooltip.padding = 12;
-  Chart.defaults.plugins.tooltip.cornerRadius = 10;
+  Chart.defaults.plugins.tooltip.titleColor = '#f5f5fc';
+  Chart.defaults.plugins.tooltip.titleFont = {weight:'600',size:12.5};
+  Chart.defaults.plugins.tooltip.bodyColor = '#a4a4bd';
+  Chart.defaults.plugins.tooltip.bodyFont = {size:12};
+  Chart.defaults.plugins.tooltip.padding = 13;
+  Chart.defaults.plugins.tooltip.cornerRadius = 11;
   Chart.defaults.plugins.tooltip.displayColors = false;
   Chart.defaults.maintainAspectRatio = false;
+  Chart.register(barValueLabel);
 }
-const GRID = 'rgba(255,255,255,.05)';
+
+/* draws the value of each bar directly on it — easier to read at a glance.
+   opt-out per chart with options.plugins.barValueLabel = false;
+   format with options.plugins.barValueLabel = { fmt: v => ... } */
+const barValueLabel = {
+  id:'barValueLabel',
+  afterDatasetsDraw(chart, _args, opts){
+    if(opts === false) return;
+    const fmtFn = (opts && opts.fmt) || (v => v);
+    const horizontal = chart.options.indexAxis === 'y';
+    const {ctx} = chart;
+    chart.data.datasets.forEach((ds, di)=>{
+      const meta = chart.getDatasetMeta(di);
+      if(meta.type !== 'bar' || meta.hidden) return;
+      meta.data.forEach((bar, i)=>{
+        const v = ds.data[i];
+        if(v == null || v === 0) return;
+        ctx.save();
+        ctx.fillStyle = '#f5f5fc';
+        ctx.font = "600 11px 'Inter',sans-serif";
+        if(horizontal){
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(fmtFn(v), bar.x + 8, bar.y);
+        } else {
+          ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+          ctx.fillText(fmtFn(v), bar.x, bar.y - 6);
+        }
+        ctx.restore();
+      });
+    });
+  }
+};
+
+const GRID = 'rgba(255,255,255,.045)';
+/* clean axis: horizontal gridlines only, brighter ticks, no axis border */
 const axis = (extra={}) => ({
   grid:{color:GRID,drawBorder:false},
-  ticks:{color:'rgba(255,255,255,.55)',...extra}
+  border:{display:false},
+  ticks:{color:'rgba(255,255,255,.62)',...extra}
+});
+/* category axis with no gridlines — for the bar baseline side */
+const axisCat = (extra={}) => ({
+  grid:{display:false,drawBorder:false},
+  border:{display:false},
+  ticks:{color:'rgba(255,255,255,.62)',...extra}
 });
 /* gradient fill helper for a canvas ctx */
 function vGradient(ctx, area, hex, a1=.45, a2=0){

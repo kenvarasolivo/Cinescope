@@ -35,8 +35,8 @@ function buildHero(){
     document.getElementById('heroFeatured').innerHTML =
       `🔥 Trending #1 · <b>${feat.title}</b> &nbsp;★ ${fmt.rating(feat.vote_average)}`;
   }
-  // collage (5 posters)
-  const picks = m.filter(x=>x.poster_path).slice(0,5);
+  // poster row (7 posters)
+  const picks = m.filter(x=>x.poster_path).slice(0,7);
   document.getElementById('collage').innerHTML = picks.map(p =>
     `<div class="pc"><img src="${IMG.poster}${p.poster_path}" alt="${p.title}" loading="lazy"></div>`
   ).join('');
@@ -96,10 +96,11 @@ function buildSnapshot(){
     ]},
     options:{
       plugins:{
-        legend:{display:true,position:'top',align:'end',labels:{color:'#9b9bb4',usePointStyle:true,pointStyle:'circle',padding:16,boxWidth:8}},
+        barValueLabel:false,
+        legend:{display:true,position:'top',align:'end',labels:{color:'#a4a4bd',usePointStyle:true,pointStyle:'circle',padding:16,boxWidth:8}},
         tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}% of titles`}}
       },
-      scales:{x:axis(),y:{...axis({callback:v=>v+'%'}),beginAtZero:true}}
+      scales:{x:axisCat(),y:{...axis({callback:v=>v+'%'}),beginAtZero:true,grace:'6%'}}
     }
   });
 

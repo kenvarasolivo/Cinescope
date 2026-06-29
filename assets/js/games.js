@@ -99,7 +99,7 @@ function buildPlatformChart(){
     data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),
       backgroundColor:sorted.map((_,i)=>PALETTE[i%PALETTE.length]),borderRadius:8,borderSkipped:false,maxBarThickness:46}]},
     options:{plugins:{tooltip:{callbacks:{label:c=>`${c.parsed.y} of ${GAMES.length} titles`}}},
-      scales:{x:axis(),y:{...axis(),beginAtZero:true,ticks:{stepSize:1,color:'rgba(255,255,255,.55)'}}}}
+      scales:{x:axisCat(),y:{...axis(),beginAtZero:true,grace:'12%',ticks:{stepSize:1,color:'rgba(255,255,255,.62)'}}}}
   });
 }
 
@@ -122,14 +122,15 @@ function buildGenreChart(){
   const freq={};
   GAMES.forEach(g=>{const n=gameGenre(g);freq[n]=(freq[n]||0)+1;});
   const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,9);
+  const gTotal=sorted.reduce((a,b)=>a+b[1],0)||1;
   charts.genre?.destroy();
   charts.genre = new Chart(document.getElementById('genreChart'),{
     type:'doughnut',
     data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),
-      backgroundColor:PALETTE,borderColor:'#0b0b14',borderWidth:2,hoverOffset:6}]},
+      backgroundColor:PALETTE,borderColor:'#0c0c15',borderWidth:2,hoverOffset:6}]},
     options:{cutout:'62%',plugins:{
-      legend:{display:true,position:'right',labels:{color:'#9b9bb4',usePointStyle:true,pointStyle:'circle',padding:9,font:{size:10},boxWidth:7}},
-      tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed} games`}}}}
+      legend:{display:true,position:'right',labels:{color:'#a4a4bd',usePointStyle:true,pointStyle:'circle',padding:11,font:{size:11},boxWidth:8}},
+      tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed} games · ${Math.round(c.parsed/gTotal*100)}%`}}}}
   });
 }
 
@@ -144,7 +145,7 @@ function buildRatingChart(){
     data:{labels:bands,datasets:[{data:counts,
       backgroundColor:bands.map((_,i)=>hexA('#22e3c4',.4+i*0.09)),borderRadius:6,borderSkipped:false}]},
     options:{plugins:{tooltip:{callbacks:{label:c=>`${c.parsed.y} games`}}},
-      scales:{x:axis({font:{size:10}}),y:{...axis(),beginAtZero:true,ticks:{stepSize:1,color:'rgba(255,255,255,.55)'}}}}
+      scales:{x:axisCat({font:{size:11}}),y:{...axis(),beginAtZero:true,grace:'12%',ticks:{stepSize:1,color:'rgba(255,255,255,.62)'}}}}
   });
 }
 
@@ -157,7 +158,7 @@ function buildYearChart(){
     type:'bar',
     data:{labels:years,datasets:[{data:years.map(y=>freq[y]),backgroundColor:'#3b82f6',borderRadius:6,borderSkipped:false,maxBarThickness:30}]},
     options:{plugins:{tooltip:{callbacks:{label:c=>`${c.parsed.y} games`}}},
-      scales:{x:axis({font:{size:10}}),y:{...axis(),beginAtZero:true,ticks:{stepSize:1,color:'rgba(255,255,255,.55)'}}}}
+      scales:{x:axisCat({font:{size:11}}),y:{...axis(),beginAtZero:true,grace:'12%',ticks:{stepSize:1,color:'rgba(255,255,255,.62)'}}}}
   });
 }
 

@@ -130,8 +130,8 @@ function buildGenreChart(){
     type:'doughnut',
     data:{labels,datasets:[{data:vals,backgroundColor:PALETTE,borderColor:'#0b0b14',borderWidth:2,hoverOffset:6}]},
     options:{cutout:'62%',plugins:{
-      legend:{display:true,position:'right',labels:{color:'#9b9bb4',usePointStyle:true,pointStyle:'circle',padding:9,font:{size:10},boxWidth:7}},
-      tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed} films`}}}}
+      legend:{display:true,position:'right',labels:{color:'#a4a4bd',usePointStyle:true,pointStyle:'circle',padding:11,font:{size:11},boxWidth:8}},
+      tooltip:{callbacks:{label:c=>{const t=vals.reduce((a,b)=>a+b,0)||1;return `${c.label}: ${c.parsed} films · ${Math.round(c.parsed/t*100)}%`;}}}}}
   });
 }
 
@@ -146,7 +146,7 @@ function buildRatingChart(){
     data:{labels:bands,datasets:[{data:counts,
       backgroundColor:bands.map((_,i)=>hexA('#ff4d6d',.4+i*0.09)),borderRadius:6,borderSkipped:false}]},
     options:{plugins:{tooltip:{callbacks:{label:c=>`${c.parsed.y} films`}}},
-      scales:{x:axis({font:{size:10}}),y:{...axis(),beginAtZero:true,ticks:{stepSize:1,color:'rgba(255,255,255,.55)'}}}}
+      scales:{x:axisCat({font:{size:11}}),y:{...axis(),beginAtZero:true,grace:'12%',ticks:{stepSize:1,color:'rgba(255,255,255,.62)'}}}}
   });
 }
 
@@ -160,7 +160,7 @@ function buildYearChart(){
     type:'bar',
     data:{labels:years,datasets:[{data:vals,backgroundColor:'#8b5cf6',borderRadius:6,borderSkipped:false,maxBarThickness:30}]},
     options:{plugins:{tooltip:{callbacks:{label:c=>`${c.parsed.y} films`}}},
-      scales:{x:axis({font:{size:10}}),y:{...axis(),beginAtZero:true,ticks:{stepSize:1,color:'rgba(255,255,255,.55)'}}}}
+      scales:{x:axisCat({font:{size:11}}),y:{...axis(),beginAtZero:true,grace:'12%',ticks:{stepSize:1,color:'rgba(255,255,255,.62)'}}}}
   });
 }
 
@@ -179,8 +179,10 @@ function buildGenreRatingChart(){
         g.addColorStop(0,'#8b5cf6');g.addColorStop(1,'#ff4d6d');return g;},
       borderRadius:6,borderSkipped:false,maxBarThickness:22}]},
     options:{indexAxis:'y',
-      plugins:{tooltip:{callbacks:{label:c=>`★ ${c.parsed.x} avg · ${rows[c.dataIndex].n} films`}}},
-      scales:{x:{...axis(),beginAtZero:true,suggestedMax:10},y:axis()}}
+      plugins:{
+        barValueLabel:{fmt:v=>'★ '+v.toFixed(1)},
+        tooltip:{callbacks:{label:c=>`★ ${c.parsed.x} avg · ${rows[c.dataIndex].n} films`}}},
+      scales:{x:{...axis(),beginAtZero:true,suggestedMax:10,grace:'4%'},y:axisCat()}}
   });
 }
 
