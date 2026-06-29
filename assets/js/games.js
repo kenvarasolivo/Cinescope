@@ -23,14 +23,29 @@ async function loadGames(){
   buildAnalytics();
 }
 
-/* ---- NEW & TRENDING (recent releases ranked by relevance) ---- */
-function buildNewTrending(){
-  const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 18);
-  let pool = GAMES.filter(g => g.released && new Date(g.released) >= cutoff);
-  if(pool.length < 6) pool = [...GAMES];
-  pool.sort((a,b) => (b.added||0) - (a.added||0));
-  const items = pool.slice(0, 12);
-  document.getElementById('newTrending').innerHTML =
+/* ---- NEW & TRENDING (recent releases ranked by popularity) ---- */
+async function buildNewTrending(){
+  const el = document.getElementById('newTrending');
+  const iso = d => d.toISOString().slice(0,10);
+  const today = new Date();
+  const from = new Date(); from.setMonth(from.getMonth() - 8);
+  let items = [];
+  try{
+    // dedicated fetch: games released in the last 8 months, ranked by library adds
+    const data = await fetchRAWG(`/games?dates=${iso(from)},${iso(today)}&ordering=-added&page_size=12`);
+    items = data.results || [];
+  }catch(e){ /* fall through to local pool */ }
+
+  if(items.length < 6){
+    // fallback (offline / sparse response): newest games from the loaded pool
+    const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 18);
+    let pool = GAMES.filter(g => g.released && new Date(g.released) >= cutoff);
+    if(pool.length < 6) pool = [...GAMES];
+    pool.sort((a,b) => (b.added||0) - (a.added||0));
+    items = pool.slice(0, 12);
+  }
+
+  el.innerHTML =
     items.length ? items.map((g,i) => gameCard(g,i)).join('') : '<div class="empty">No new releases trending.</div>';
 }
 
