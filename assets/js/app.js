@@ -88,6 +88,12 @@ const gameRating10 = g => (g.rating ? g.rating * 2 : 0);
 const $  = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 
+/* keep the footer copyright year current without touching each HTML file */
+(function(){
+  const span = document.querySelector('.footer-bottom span');
+  if(span) span.textContent = span.textContent.replace(/©\s*\d{4}/, `© ${new Date().getFullYear()}`);
+})();
+
 function skeletons(n){
   return Array.from({length:n}, () =>
     `<div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line"></div><div class="skel-line short"></div></div></div>`

@@ -8,7 +8,11 @@ async function loadGames(){
   document.getElementById('gameGrid').innerHTML = skeletons(12);
   document.getElementById('newTrending').innerHTML = skeletons(8);
   try{
-    const data = await fetchRAWG('/games?ordering=-added&page_size=40&dates=2023-01-01,2026-12-31');
+    // rolling window so the catalog stays current instead of a frozen 2023 start
+    const iso = d => d.toISOString().slice(0,10);
+    const from = new Date(); from.setFullYear(from.getFullYear() - 2);  // last 2 years
+    const to   = new Date(); to.setMonth(to.getMonth() + 1);            // + imminent releases
+    const data = await fetchRAWG(`/games?ordering=-added&page_size=40&dates=${iso(from)},${iso(to)}`);
     GAMES = data.results || [];
     if(!GAMES.length) throw new Error('empty response');
   }catch(e){
