@@ -6,9 +6,12 @@ let L_MOVIES = [], L_GAMES = [];
 async function loadLanding(){
   document.getElementById('trendStrip').innerHTML = skeletons(8);
 
+  const iso = d => d.toISOString().slice(0,10);
+  const gFrom = new Date(); gFrom.setMonth(gFrom.getMonth() - 6);  // rolling: recent releases only
+  const gTo   = new Date(); gTo.setMonth(gTo.getMonth() + 1);      // + imminent releases
   const [movies, games] = await Promise.all([
     fetchTMDB('/trending/movie/week').then(d=>d.results||[]).catch(()=>[]),
-    fetchRAWG('/games?ordering=-added&page_size=20&dates=2024-01-01,2026-12-31').then(d=>d.results||[]).catch(()=>[]),
+    fetchRAWG(`/games?ordering=-added&page_size=20&dates=${iso(gFrom)},${iso(gTo)}`).then(d=>d.results||[]).catch(()=>[]),
   ]);
 
   L_MOVIES = movies;

@@ -23,16 +23,28 @@ async function loadGames(){
   buildAnalytics();
 }
 
-/* ---- NEW & TRENDING (recent releases ranked by popularity) ---- */
+/* ---- NEW & TRENDING (recent + upcoming releases, recency-weighted) ---- */
+// RAWG has no trending endpoint, so we mimic its "New & Trending" homepage:
+// a tight rolling window around today ranked by popularity that decays with age,
+// so this week's fast-rising releases outrank older established hits.
+function trendScore(g){
+  const added = g.added || 0;
+  if(!g.released) return added;
+  const days = (Date.now() - new Date(g.released)) / 86400000;
+  // future/just-released → full weight; ~halves each month of age
+  const recency = 1 / (1 + Math.max(0, days) / 30);
+  return added * recency;
+}
+
 async function buildNewTrending(){
   const el = document.getElementById('newTrending');
   const iso = d => d.toISOString().slice(0,10);
-  const today = new Date();
-  const from = new Date(); from.setMonth(from.getMonth() - 8);
+  const from = new Date(); from.setMonth(from.getMonth() - 4);   // last 4 months
+  const to   = new Date(); to.setMonth(to.getMonth() + 1);       // + imminent releases
   let items = [];
   try{
-    // dedicated fetch: games released in the last 8 months, ranked by library adds
-    const data = await fetchRAWG(`/games?dates=${iso(from)},${iso(today)}&ordering=-added&page_size=12`);
+    // wide fresh pull; ranked client-side so brand-new titles can surface
+    const data = await fetchRAWG(`/games?dates=${iso(from)},${iso(to)}&ordering=-added&page_size=40`);
     items = data.results || [];
   }catch(e){ /* fall through to local pool */ }
 
@@ -41,9 +53,10 @@ async function buildNewTrending(){
     const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 18);
     let pool = GAMES.filter(g => g.released && new Date(g.released) >= cutoff);
     if(pool.length < 6) pool = [...GAMES];
-    pool.sort((a,b) => (b.added||0) - (a.added||0));
-    items = pool.slice(0, 12);
+    items = pool;
   }
+
+  items = items.sort((a,b) => trendScore(b) - trendScore(a)).slice(0, 12);
 
   el.innerHTML =
     items.length ? items.map((g,i) => gameCard(g,i)).join('') : '<div class="empty">No new releases trending.</div>';
