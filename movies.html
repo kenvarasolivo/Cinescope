@@ -32,18 +32,43 @@
   </div>
 </header>
 
-<!-- HEADER -->
-<header class="page-head">
-  <div class="page-head-bg" id="headBg"></div>
-  <div class="wrap">
-    <span class="badge"><span class="pulse"></span>Live · TMDB</span>
-    <h1>Trending <span class="accent-m">Movies</span></h1>
-    <p>The week's most-watched films worldwide — explored through ratings, genre momentum, popularity and release timelines.</p>
+<!-- SPOTLIGHT HERO -->
+<section class="spot compact" id="spot">
+  <div class="spot-stage" id="spotStage"></div>
+  <div class="spot-veil"></div>
+
+  <div class="spot-grid">
+    <div class="spot-copy">
+      <h1 class="spot-kicker"><span class="label">Trending Movies</span></h1>
+      <p class="spot-tagline">The week's most-watched films worldwide — explored through ratings, genre momentum, popularity and release timelines.</p>
+      <div class="spot-now"><span class="badge"><span class="pulse"></span>Live · TMDB</span></div>
+      <div class="spot-title" id="spotTitle">Loading trending films…</div>
+      <div class="spot-meta" id="spotMeta"></div>
+      <p class="spot-blurb" id="spotBlurb"></p>
+      <div class="spot-actions">
+        <a href="#catalog" class="btn btn-light">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Browse catalog
+        </a>
+        <a href="#analytics" class="btn btn-ghost">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          See analytics
+        </a>
+      </div>
+    </div>
+    <div class="spot-art">
+      <div class="spot-poster" id="spotPoster"></div>
+    </div>
   </div>
-</header>
+
+  <div class="spot-picker">
+    <div class="spot-picker-label">Up next</div>
+    <div class="spot-thumbs" id="spotThumbs"></div>
+  </div>
+</section>
 
 <!-- KPIs -->
-<section class="section" style="padding-top:18px;padding-bottom:24px">
+<section class="section" style="padding-top:56px;padding-bottom:24px">
   <div class="wrap">
     <div id="movieError" class="banner"></div>
     <div class="kpi-grid">
@@ -77,12 +102,16 @@
         <p class="sub">Recent releases ranked by relevance — the films surging this week.</p>
       </div>
     </div>
-    <div class="scroller" id="newTrending"></div>
+    <div class="rail">
+      <button class="rail-nav prev off" aria-label="Scroll left"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="rail-track" id="newTrending"></div>
+      <button class="rail-nav next" aria-label="Scroll right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
   </div>
 </section>
 
 <!-- CATALOG -->
-<section class="section" style="padding-top:8px">
+<section class="section" id="catalog" style="padding-top:8px">
   <div class="wrap">
     <div class="section-head">
       <div><div class="eyebrow">Catalog</div><h2 class="h-section">Browse trending films</h2></div>
@@ -101,7 +130,7 @@
 </section>
 
 <!-- ANALYTICS -->
-<section class="section" style="background:var(--bg-soft);border-top:1px solid var(--border)">
+<section class="section" id="analytics" style="background:var(--bg-soft);border-top:1px solid var(--border)">
   <div class="wrap">
     <div class="section-head reveal">
       <div><div class="eyebrow">Deep dive</div><h2 class="h-section">Movie analytics</h2>

@@ -16,7 +16,7 @@ async function loadMovies(){
     document.getElementById('movieGrid').innerHTML = '<div class="empty">No movie data available.</div>';
     return;
   }
-  buildHeaderBg();
+  buildSpotlight();
   buildKPIs();
   buildNewTrending();
   buildChips();
@@ -35,9 +35,10 @@ function buildNewTrending(){
     items.length ? items.map((m,i) => movieCard(m,i)).join('') : '<div class="empty">No new releases trending.</div>';
 }
 
-function buildHeaderBg(){
-  const feat = MOVIES.find(m=>m.backdrop_path);
-  if(feat) document.getElementById('headBg').style.backgroundImage = `url(${IMG.backdrop}${feat.backdrop_path})`;
+/* ---- SPOTLIGHT (rotating hero) ---- */
+function buildSpotlight(){
+  const withArt = MOVIES.filter(m=>m.backdrop_path && m.poster_path);
+  initSpotlight((withArt.length ? withArt : MOVIES).slice(0,7).map(movieSpot));
 }
 
 /* ---- KPIs ---- */
@@ -125,8 +126,8 @@ function buildLeaderboard(){
   document.getElementById('movieLeaderboard').innerHTML = items.map((m,i)=>`
     <div class="lb-item">
       <div class="lb-rank ${medal[i]||''}">${i+1}</div>
-      <div class="lb-thumb">${m.poster_path?`<img src="${IMG.posterSm}${m.poster_path}" alt="${m.title}" loading="lazy">`:'🎬'}</div>
-      <div class="lb-info"><div class="lb-title">${m.title}</div>
+      <div class="lb-thumb">${m.poster_path?`<img src="${IMG.posterSm}${m.poster_path}" alt="${esc(m.title)}" loading="lazy">`:'🎬'}</div>
+      <div class="lb-info"><div class="lb-title">${esc(m.title)}</div>
         <div class="lb-tags">${movieGenre(m)} · ${fmt.compact(m.vote_count)} votes</div></div>
       <div class="lb-metric"><div class="lb-num" style="color:var(--gold)">${m.vote_average.toFixed(1)}</div>
         <div class="lb-bar"><div class="lb-fill" style="width:${m.vote_average*10}%;background:var(--gold)"></div></div></div>

@@ -88,6 +88,10 @@ const gameRating10 = g => (g.rating ? g.rating * 2 : 0);
 const $  = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 
+/* titles come from third-party APIs — escape before interpolating into markup */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+
 /* keep the footer copyright year current without touching each HTML file */
 (function(){
   const span = document.querySelector('.footer-bottom span');
@@ -95,9 +99,7 @@ const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 })();
 
 function skeletons(n){
-  return Array.from({length:n}, () =>
-    `<div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line"></div><div class="skel-line short"></div></div></div>`
-  ).join('');
+  return Array.from({length:n}, () => `<div class="skel"><div class="skel-img"></div></div>`).join('');
 }
 function showBanner(id, msg){
   const el = document.getElementById(id);
@@ -122,48 +124,80 @@ function countUp(el, target, opts={}){
   requestAnimationFrame(step);
 }
 
-/* ---- MEDIA CARDS ---- */
-function movieCard(m, idx){
-  const poster = m.poster_path
-    ? `<img src="${IMG.poster}${m.poster_path}" alt="${m.title}" loading="lazy">`
-    : `<div class="poster-fallback">🎬</div>`;
+/* ---- MEDIA CARDS ----
+   Poster-first: the artwork fills the card and the copy sits on a gradient
+   over it, so the poster is the thing you actually look at. */
+function mediaCard({kind, title, img, fallback, genre, year, score, idx}){
+  const art = img
+    ? `<img src="${img}" alt="${esc(title)}" loading="lazy">`
+    : `<div class="poster-fallback">${fallback}</div>`;
   return `
-  <article class="card m" data-genre="${movieGenre(m)}">
-    <div class="card-poster">
-      ${poster}<div class="card-grad"></div>
-      <div class="card-rank">${idx+1}</div>
-      ${idx<3 ? '<div class="card-hot">Hot</div>' : ''}
-      <div class="card-score">★ ${fmt.rating(m.vote_average)}</div>
-    </div>
-    <div class="card-body">
-      <div class="card-title">${m.title}</div>
+  <article class="card ${kind}" data-genre="${esc(genre)}" tabindex="0">
+    <div class="card-art">${art}</div>
+    <div class="card-shade"></div>
+    <div class="card-rank">${idx+1}</div>
+    ${idx<3 ? '<div class="card-hot">Hot</div>' : ''}
+    <div class="card-score">★ ${score}</div>
+    <div class="card-info">
+      <div class="card-title">${esc(title)}</div>
       <div class="card-meta">
-        <span class="pill pill-m">${movieGenre(m)}</span>
-        <span>${fmt.year(m.release_date)}</span>
+        <span class="pill pill-${kind}">${esc(genre)}</span>
+        <span>${year}</span>
       </div>
     </div>
   </article>`;
 }
+function movieCard(m, idx){
+  return mediaCard({
+    kind:'m', title:m.title, fallback:'🎬', idx,
+    img: m.poster_path ? IMG.poster + m.poster_path : null,
+    genre: movieGenre(m), year: fmt.year(m.release_date), score: fmt.rating(m.vote_average),
+  });
+}
 function gameCard(g, idx){
-  const poster = g.background_image
-    ? `<img src="${g.background_image}" alt="${g.name}" loading="lazy">`
-    : `<div class="poster-fallback">🎮</div>`;
-  return `
-  <article class="card g" data-genre="${gameGenre(g)}">
-    <div class="card-poster">
-      ${poster}<div class="card-grad"></div>
-      <div class="card-rank">${idx+1}</div>
-      ${idx<3 ? '<div class="card-hot">Hot</div>' : ''}
-      <div class="card-score">★ ${fmt.rating(gameRating10(g))}</div>
-    </div>
-    <div class="card-body">
-      <div class="card-title">${g.name}</div>
-      <div class="card-meta">
-        <span class="pill pill-g">${gameGenre(g)}</span>
-        <span>${fmt.year(g.released)}</span>
-      </div>
-    </div>
-  </article>`;
+  return mediaCard({
+    kind:'g', title:g.name, fallback:'🎮', idx,
+    img: g.background_image || null,
+    genre: gameGenre(g), year: fmt.year(g.released), score: fmt.rating(gameRating10(g)),
+  });
+}
+
+/* ---- SPOTLIGHT ITEMS ---- */
+const spotMeta = parts => parts.filter(Boolean)
+  .join('<span class="dot"></span>');
+
+function movieSpot(m, i){
+  return {
+    title: m.title,
+    backdrop: m.backdrop_path ? IMG.backdrop + m.backdrop_path : null,
+    poster: m.poster_path ? IMG.poster + m.poster_path : null,
+    blurb: m.overview,
+    icon: '🎬',
+    meta: `<span class="rank">#${i+1} Trending</span>` + spotMeta([
+      `<span class="score">★ ${fmt.rating(m.vote_average)}</span>`,
+      `<span>${fmt.year(m.release_date)}</span>`,
+      `<span>${esc(movieGenre(m))}</span>`,
+      m.vote_count ? `<span>${fmt.compact(m.vote_count)} votes</span>` : '',
+    ]),
+  };
+}
+/* RAWG list rows carry no synopsis, so the meta line does the talking */
+function gameSpot(g, i){
+  const plats = (g.platforms||[]).map(p=>p.platform?.name).filter(Boolean).slice(0,3).join(' · ');
+  return {
+    title: g.name,
+    backdrop: g.background_image || null,
+    poster: g.background_image || null,
+    blurb: plats ? `Available on ${plats}.` : '',
+    icon: '🎮',
+    meta: `<span class="rank">#${i+1} Trending</span>` + spotMeta([
+      `<span class="score">★ ${fmt.rating(gameRating10(g))}</span>`,
+      `<span>${fmt.year(g.released)}</span>`,
+      `<span>${esc(gameGenre(g))}</span>`,
+      g.metacritic ? `<span>Metacritic ${g.metacritic}</span>` : '',
+      g.added ? `<span>${fmt.compact(g.added)} players</span>` : '',
+    ]),
+  };
 }
 
 /* ---- CHART.JS GLOBAL THEME ---- */
@@ -262,6 +296,119 @@ function initNav(){
   });
 }
 
+/* ---- SPOTLIGHT HERO ----
+   Cinematic backdrop that crossfades through the top titles while the copy
+   (and the showcased poster) swap in beside it.
+   items: [{title, backdrop, poster, meta, blurb, icon}] */
+const SPOT_INTERVAL = 7000;
+
+function initSpotlight(items){
+  const root = document.getElementById('spot');
+  if(!root || !items.length) return;
+
+  const stage  = document.getElementById('spotStage');
+  const title  = document.getElementById('spotTitle');
+  const meta   = document.getElementById('spotMeta');
+  const blurb  = document.getElementById('spotBlurb');
+  const poster = document.getElementById('spotPoster');
+  const thumbs = document.getElementById('spotThumbs');
+
+  root.style.setProperty('--spot-int', SPOT_INTERVAL + 'ms');
+
+  const layers = [0,1].map(()=>{
+    const d = document.createElement('div');
+    d.className = 'spot-layer';
+    stage.appendChild(d);
+    return d;
+  });
+
+  thumbs.innerHTML = items.map((it,i)=>`
+    <button class="spot-thumb" data-i="${i}" aria-label="${esc(it.title)}">
+      ${it.poster ? `<img src="${it.poster}" alt="" loading="lazy">` : `<span class="pf">${it.icon}</span>`}
+      <span class="spot-thumb-bar"></span>
+    </button>`).join('');
+  const thumbEls = $$('.spot-thumb', thumbs);
+
+  let idx = -1, front = 0, timer = null;
+
+  function show(i){
+    if(i === idx) return;
+    idx = (i + items.length) % items.length;
+    const it = items[idx];
+
+    if(it.backdrop){
+      const next = layers[front ^ 1];
+      next.style.backgroundImage = `url("${it.backdrop}")`;
+      next.classList.remove('kb');
+      void next.offsetWidth;              // restart the ken-burns pan
+      next.classList.add('kb','on');
+      layers[front].classList.remove('on');
+      front ^= 1;
+    }
+
+    title.textContent = it.title;
+    meta.innerHTML    = it.meta || '';
+    blurb.textContent = it.blurb || '';
+    poster.innerHTML  = it.poster
+      ? `<img src="${it.poster}" alt="${esc(it.title)}">`
+      : `<div class="pf">${it.icon}</div>`;
+
+    thumbEls.forEach((t,n)=>t.classList.toggle('active', n === idx));
+    const t = thumbEls[idx];   // keep the active thumb in view without moving the page
+    thumbs.scrollTo({left: t.offsetLeft - (thumbs.clientWidth - t.clientWidth)/2, behavior:'smooth'});
+
+    root.classList.remove('swap');
+    void root.offsetWidth;                // replay the copy entrance
+    root.classList.add('swap');
+  }
+
+  function schedule(){
+    clearTimeout(timer);
+    if(items.length < 2) return;
+    root.classList.remove('paused');
+    // replay the progress bar so it stays in step with the timer
+    const t = thumbEls[idx];
+    t.classList.remove('active'); void t.offsetWidth; t.classList.add('active');
+    timer = setTimeout(()=>goto(idx+1), SPOT_INTERVAL);
+  }
+  function pause(){ clearTimeout(timer); root.classList.add('paused'); }
+  function goto(i){ show(i); schedule(); }
+
+  thumbEls.forEach(t=>t.addEventListener('click', ()=>goto(+t.dataset.i)));
+  // don't rotate away while someone is reading / off-tab
+  root.addEventListener('mouseenter', pause);
+  root.addEventListener('mouseleave', schedule);
+  document.addEventListener('visibilitychange', ()=>
+    document.hidden ? pause() : schedule());
+
+  goto(0);
+}
+
+/* ---- RAILS (horizontal rows with arrow nav) ---- */
+function initRails(){
+  $$('.rail').forEach(rail=>{
+    const track = $('.rail-track', rail);
+    const prev  = $('.rail-nav.prev', rail);
+    const next  = $('.rail-nav.next', rail);
+    if(!track || !prev || !next) return;
+
+    const step = () => Math.max(track.clientWidth * .82, 220);
+    prev.addEventListener('click', ()=>track.scrollBy({left:-step()}));
+    next.addEventListener('click', ()=>track.scrollBy({left: step()}));
+
+    const sync = ()=>{
+      const max = track.scrollWidth - track.clientWidth;
+      prev.classList.toggle('off', track.scrollLeft < 8);
+      next.classList.toggle('off', max < 8 || track.scrollLeft > max - 8);
+    };
+    track.addEventListener('scroll', sync, {passive:true});
+    window.addEventListener('resize', sync);
+    // cards arrive after the API responds — re-check once they land
+    new MutationObserver(sync).observe(track, {childList:true});
+    sync();
+  });
+}
+
 /* ---- SCROLL REVEAL ---- */
 function initReveal(){
   const els = $$('.reveal');
@@ -272,4 +419,4 @@ function initReveal(){
   els.forEach(e=>io.observe(e));
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{ initNav(); initReveal(); initChartTheme(); });
+document.addEventListener('DOMContentLoaded', ()=>{ initNav(); initReveal(); initRails(); initChartTheme(); });

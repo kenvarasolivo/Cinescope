@@ -28,21 +28,13 @@ async function loadLanding(){
 /* ---- HERO ---- */
 function buildHero(){
   const m = L_MOVIES;
-  // backdrop
-  const feat = m.find(x=>x.backdrop_path) || m[0];
-  if(feat && feat.backdrop_path){
-    const bg = document.getElementById('heroBg');
-    const img = new Image();
-    img.onload = ()=>{ bg.style.backgroundImage = `url(${IMG.backdrop}${feat.backdrop_path})`; bg.style.opacity = '1'; };
-    img.src = `${IMG.backdrop}${feat.backdrop_path}`;
-    document.getElementById('heroFeatured').innerHTML =
-      `🔥 Trending #1 · <b>${feat.title}</b> &nbsp;★ ${fmt.rating(feat.vote_average)}`;
-  }
-  // poster row (7 posters)
-  const picks = m.filter(x=>x.poster_path).slice(0,7);
-  document.getElementById('collage').innerHTML = picks.map(p =>
-    `<div class="pc"><img src="${IMG.poster}${p.poster_path}" alt="${p.title}" loading="lazy"></div>`
-  ).join('');
+
+  // rotating spotlight — the week's top films, backdrop + poster + synopsis.
+  // falls back to games so the hero is never left empty.
+  const films = m.filter(x=>x.backdrop_path && x.poster_path).slice(0,7);
+  initSpotlight(films.length
+    ? films.map(movieSpot)
+    : L_GAMES.slice(0,7).map(gameSpot));
 
   // stats
   const mRat = m.map(x=>x.vote_average).filter(Boolean);
@@ -72,10 +64,10 @@ function buildGateways(){
   set('gwGameTop', gRat.length ? Math.max(...gRat).toFixed(1) : '—');
 
   document.getElementById('gwMoviePosters').innerHTML = m.filter(x=>x.poster_path).slice(0,5)
-    .map(x=>`<img src="${IMG.posterSm}${x.poster_path}" alt="${x.title}" loading="lazy">`).join('');
+    .map(x=>`<img src="${IMG.posterSm}${x.poster_path}" alt="${esc(x.title)}" loading="lazy">`).join('');
   document.getElementById('gwGamePosters').innerHTML = g.slice(0,5)
     .map(x=> x.background_image
-      ? `<img src="${x.background_image}" alt="${x.name}" loading="lazy">`
+      ? `<img src="${x.background_image}" alt="${esc(x.name)}" loading="lazy">`
       : `<div class="pf">🎮</div>`).join('');
 }
 
@@ -119,8 +111,8 @@ function buildSnapshot(){
   document.getElementById('topMovers').innerHTML = movers.map((it,i)=>`
     <div class="lb-item">
       <div class="lb-rank ${medal[i]||''}">${i+1}</div>
-      <div class="lb-thumb">${it.img?`<img src="${it.img}" alt="${it.title}" loading="lazy">`:it.emoji}</div>
-      <div class="lb-info"><div class="lb-title">${it.title}</div>
+      <div class="lb-thumb">${it.img?`<img src="${it.img}" alt="${esc(it.title)}" loading="lazy">`:it.emoji}</div>
+      <div class="lb-info"><div class="lb-title">${esc(it.title)}</div>
         <div class="lb-tags"><span class="pill pill-${it.cls}">${it.type}</span></div></div>
       <div class="lb-metric"><div class="lb-num">${it.score}</div>
         <div class="lb-bar"><div class="lb-fill" style="width:${it.score/max*100}%;background:${it.cls==='m'?'var(--movie)':'var(--game)'}"></div></div></div>

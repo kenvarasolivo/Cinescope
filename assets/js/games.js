@@ -19,7 +19,7 @@ async function loadGames(){
     showBanner('gameError', `Could not load games: ${e.message}. Showing demo data.`);
     GAMES = MOCK_GAMES;
   }
-  buildHeaderBg();
+  buildSpotlight();
   buildKPIs();
   buildNewTrending();
   buildChips();
@@ -66,9 +66,11 @@ async function buildNewTrending(){
     items.length ? items.map((g,i) => gameCard(g,i)).join('') : '<div class="empty">No new releases trending.</div>';
 }
 
-function buildHeaderBg(){
-  const feat = GAMES.find(g=>g.background_image);
-  if(feat) document.getElementById('headBg').style.backgroundImage = `url(${feat.background_image})`;
+/* ---- SPOTLIGHT (rotating hero) ---- */
+function buildSpotlight(){
+  // demo data carries no artwork — still spotlight it, just without a backdrop
+  const withArt = GAMES.filter(g=>g.background_image);
+  initSpotlight((withArt.length ? withArt : GAMES).slice(0,7).map(gameSpot));
 }
 
 /* ---- KPIs ---- */
@@ -155,8 +157,8 @@ function buildLeaderboard(){
   document.getElementById('gameLeaderboard').innerHTML = items.map((g,i)=>`
     <div class="lb-item">
       <div class="lb-rank ${medal[i]||''}">${i+1}</div>
-      <div class="lb-thumb">${g.background_image?`<img src="${g.background_image}" alt="${g.name}" loading="lazy">`:'🎮'}</div>
-      <div class="lb-info"><div class="lb-title">${g.name}</div>
+      <div class="lb-thumb">${g.background_image?`<img src="${g.background_image}" alt="${esc(g.name)}" loading="lazy">`:'🎮'}</div>
+      <div class="lb-info"><div class="lb-title">${esc(g.name)}</div>
         <div class="lb-tags">${gameGenre(g)} · ★ ${fmt.rating(gameRating10(g))}</div></div>
       <div class="lb-metric"><div class="lb-num" style="color:var(--game)">${fmt.compact(g.added||0)}</div>
         <div class="lb-bar"><div class="lb-fill" style="width:${(g.added||0)/max*100}%;background:var(--game)"></div></div></div>

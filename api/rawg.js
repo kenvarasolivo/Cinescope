@@ -15,7 +15,11 @@ export default async function handler(req, res) {
   const targetUrl = `https://api.rawg.io/api/${clean}${sep}key=${process.env.RAWG_KEY}`;
 
   try {
-    const upstream = await fetch(targetUrl, { headers: { Accept: "application/json" } });
+    // RAWG outages hang for ~20s at their edge — fail fast so the client can fall back
+    const upstream = await fetch(targetUrl, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
     const data = await upstream.json();
 
     if (upstream.ok) {
